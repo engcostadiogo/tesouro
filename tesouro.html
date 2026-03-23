@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Caça ao Tesouro - Navegação</title>
+</head>
+<body>
+
+<h2>🧭 Navegação</h2>
+
+<p>Heading: <span id="heading">--</span>°</p>
+<p>Bearing: <span id="bearing">--</span>°</p>
+<p>Distância: <span id="distance">--</span> m</p>
+<div class="box">Latitude: <span id="lat">--</span></div>
+<div class="box">Longitude: <span id="lon">--</span></div>
+<div class="box">Altitude: <span id="alt">--</span></div>
+
+<script>
+let target = {
+  lat: -15.793889,  // exemplo (Brasília)
+  lon: -47.882778
+};
+
+let heading = 0;
+
+// Bússola
+window.addEventListener("deviceorientation", (event) => {
+  heading = event.alpha; // graus
+  document.getElementById("heading").innerText = heading.toFixed(1);
+});
+
+// GPS
+navigator.geolocation.watchPosition(pos => {
+  let lat = pos.coords.latitude;
+  let lon = pos.coords.longitude;
+
+  let d = distance(lat, lon, target.lat, target.lon);
+  let b = bearing(lat, lon, target.lat, target.lon);
+
+  document.getElementById("distance").innerText = d.toFixed(1);
+  document.getElementById("bearing").innerText = b.toFixed(1);
+
+}, err => console.log(err), { enableHighAccuracy: true });
+
+function toRad(deg){ return deg * Math.PI / 180; }
+function toDeg(rad){ return rad * 180 / Math.PI; }
+
+// Haversine
+function distance(lat1, lon1, lat2, lon2){
+  let R = 6371000;
+  let dLat = toRad(lat2-lat1);
+  let dLon = toRad(lon2-lon1);
+
+  let a = Math.sin(dLat/2)**2 +
+          Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon/2)**2;
+
+  let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Bearing
+function bearing(lat1, lon1, lat2, lon2){
+  let dLon = toRad(lon2 - lon1);
+
+  let y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  let x = Math.cos(toRad(lat1))*Math.sin(toRad(lat2)) -
+          Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(dLon);
+
+  let brng = toDeg(Math.atan2(y, x));
+  return (brng + 360) % 360;
+}
+</script>
+
+</body>
+</html>
